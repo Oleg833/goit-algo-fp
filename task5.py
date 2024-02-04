@@ -1,4 +1,5 @@
 import uuid
+import heapq
 import networkx as nx
 import matplotlib.pyplot as plt
 from collections import deque
@@ -118,24 +119,30 @@ def draw_trees_combined(dfs_root, bfs_root):
     plt.show()
 
 
-
-root = Node(0)
-root.left = Node(4)
-root.left.left = Node(5)
-root.left.right = Node(10)
-root.right = Node(1)
-root.right.left = Node(3)
-root.right.right = Node(2)
-
-
-dfs_order = dfs(root)
-dfs_tree_root = copy_tree(root)
-update_node_colors_by_order_new(dfs_tree_root, dfs_order)
+def build_heap_tree(heap, i=0):
+    if i < len(heap):
+        node = Node(heap[i])
+        node.left = build_heap_tree(heap, 2 * i + 1)
+        node.right = build_heap_tree(heap, 2 * i + 2)
+        return node
+    return None
 
 
-bfs_order = bfs(root)
-bfs_tree_root = copy_tree(root)
-update_node_colors_by_order_new(bfs_tree_root, bfs_order)
+def main():
+    heap_array = [1, 3, 5, 7, 9, 2, 4, 34, 6, 10, 8, 13, 14, 15, 17]
+    heapq.heapify(heap_array)
+    root = build_heap_tree(heap_array)
+
+    dfs_order = dfs(root)
+    dfs_tree_root = copy_tree(root)
+    update_node_colors_by_order_new(dfs_tree_root, dfs_order)
+
+    bfs_order = bfs(root)
+    bfs_tree_root = copy_tree(root)
+    update_node_colors_by_order_new(bfs_tree_root, bfs_order)
+
+    draw_trees_combined(dfs_tree_root, bfs_tree_root)
 
 
-draw_trees_combined(dfs_tree_root, bfs_tree_root)
+if __name__ == "__main__":
+    main()

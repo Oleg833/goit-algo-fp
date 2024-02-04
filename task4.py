@@ -3,6 +3,7 @@ import heapq
 import networkx as nx
 import matplotlib.pyplot as plt
 
+
 class Node:
     def __init__(self, key, color="skyblue"):
         self.left = None
@@ -11,38 +12,52 @@ class Node:
         self.color = color
         self.id = str(uuid.uuid4())
 
-def add_heap_edges(graph, heap, pos, layer=1, index=0, x=0, y=0):
-    if index < len(heap):
-        node = heap[index]
+
+def add_edges(graph, node, pos, x=0, y=0, layer=1):
+    if node is not None:
         graph.add_node(node.id, color=node.color, label=node.val)
-        if 2 * index + 1 < len(heap):
-            graph.add_edge(node.id, heap[2 * index + 1].id)
-            l = x - 1 / 2 ** layer
-            pos[heap[2 * index + 1].id] = (l, y - 1)
-            add_heap_edges(graph, heap, pos, layer=layer + 1, index=2 * index + 1, x=l, y=y - 1)
-        if 2 * index + 2 < len(heap):
-            graph.add_edge(node.id, heap[2 * index + 2].id)
-            r = x + 1 / 2 ** layer
-            pos[heap[2 * index + 2].id] = (r, y - 1)
-            add_heap_edges(graph, heap, pos, layer=layer + 1, index=2 * index + 2, x=r, y=y - 1)
+        if node.left:
+            graph.add_edge(node.id, node.left.id)
+            l = x - 1 / 2**layer
+            pos[node.left.id] = (l, y - 1)
+            l = add_edges(graph, node.left, pos, x=l, y=y - 1, layer=layer + 1)
+        if node.right:
+            graph.add_edge(node.id, node.right.id)
+            r = x + 1 / 2**layer
+            pos[node.right.id] = (r, y - 1)
+            r = add_edges(graph, node.right, pos, x=r, y=y - 1, layer=layer + 1)
+    return graph
 
-def draw_heap(heap):
-    heap_graph = nx.DiGraph()
-    pos = {heap[0].id: (0, 0)}
-    add_heap_edges(heap_graph, heap, pos)
 
-    colors = [node[1]['color'] for node in heap_graph.nodes(data=True)]
-    labels = {node[0]: node[1]['label'] for node in heap_graph.nodes(data=True)}
+def draw_tree(tree_root):
+    tree = nx.DiGraph()
+    pos = {tree_root.id: (0, 0)}
+    tree = add_edges(tree, tree_root, pos)
+
+    colors = [node[1]["color"] for node in tree.nodes(data=True)]
+    labels = {node[0]: node[1]["label"] for node in tree.nodes(data=True)}
 
     plt.figure(figsize=(8, 5))
-    nx.draw(heap_graph, pos=pos, labels=labels, arrows=False, node_size=2500, node_color=colors)
+    nx.draw(
+        tree, pos=pos, labels=labels, arrows=False, node_size=2500, node_color=colors
+    )
     plt.show()
 
 
-def main():
-    heap = [Node(10), Node(5), Node(6), Node(4), Node(2), Node(3), Node(1)]
+def build_heap_tree(heap, i=0):
+    if i < len(heap):
+        node = Node(heap[i])
+        node.left = build_heap_tree(heap, 2 * i + 1)
+        node.right = build_heap_tree(heap, 2 * i + 2)
+        return node
+    return None
 
-    draw_heap(heap)
+
+def main():
+    heap_array = [1, 3, 5, 7, 9, 2, 4, 34, 6, 10, 8, 13, 14, 15, 17]
+    heapq.heapify(heap_array)
+    heap_tree_root = build_heap_tree(heap_array)
+    draw_tree(heap_tree_root)
 
 
 if __name__ == "__main__":
